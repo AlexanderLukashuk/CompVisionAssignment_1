@@ -17,7 +17,7 @@ seed = 42
 np.random.seed(seed)
 tf.random.set_seed(seed)
 
-# Specify the path to dataset directory
+# Specify the path to your dataset directory
 data_dir = "/Users/aleksandrlukasuk/aitu_study/computer_vision/ass_1/Agricultural-crops"
 
 # Create an ImageDataGenerator for loading and preprocessing the images
@@ -28,7 +28,7 @@ datagen = ImageDataGenerator(
 
 # Load and preprocess the dataset using the generator
 batch_size = 32  # Adjust as needed
-image_size = (224, 224)  # Adjust based on image size
+image_size = (224, 224)  # Adjust based on your image size
 train_generator = datagen.flow_from_directory(
     data_dir,
     target_size=image_size,
@@ -48,8 +48,8 @@ X_train_filenames, X_val_filenames, y_train, y_val = train_test_split(
     test_size=0.1, random_state=seed
 )
 
-# Softmax Regression model
-def softmax_regression(input_dim, num_classes, alpha=0.1, num_epochs=50):
+# Define Softmax Regression model
+def softmax_regression(input_dim, num_classes, alpha=0.1, num_epochs=1000):
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(input_dim,)),
         tf.keras.layers.Dense(num_classes, activation='softmax')
@@ -63,7 +63,7 @@ def softmax_regression(input_dim, num_classes, alpha=0.1, num_epochs=50):
     
     return model
 
-# SVM model
+# Define SVM model
 def support_vector_machine(X_train, y_train, X_val, y_val, C=1.0):
     model = SVC(C=C, kernel='linear')
     model.fit(X_train, y_train)
@@ -75,14 +75,14 @@ X_train = np.array([img_to_array(load_img(os.path.join(data_dir, filename), targ
 X_val = np.array([img_to_array(load_img(os.path.join(data_dir, filename), target_size=image_size)) for filename in X_val_filenames])
 X_test = np.array([img_to_array(load_img(os.path.join(data_dir, filename), target_size=image_size)) for filename in X_test_filenames])
 
-# Smoothing image data
+# Flatten the image data
 X_train = X_train.reshape(X_train.shape[0], -1)
 X_val = X_val.reshape(X_val.shape[0], -1)
 X_test = X_test.reshape(X_test.shape[0], -1)
 
 # Define Softmax Regression model as a scikit-learn estimator
 class SoftmaxRegressionEstimator(BaseEstimator):
-    def __init__(self, input_dim, num_classes, alpha=0.1, num_epochs=50):
+    def __init__(self, input_dim, num_classes, alpha=0.1, num_epochs=1000):
         self.input_dim = input_dim
         self.num_classes = num_classes
         self.alpha = alpha
@@ -93,6 +93,7 @@ class SoftmaxRegressionEstimator(BaseEstimator):
         return self.model
 
     def predict(self, X):
+        # return self.model.predict_classes(X
         return np.argmax(self.model.predict(X), axis=-1)
 
 # Define SVM model as a scikit-learn estimator
@@ -109,7 +110,7 @@ class SVMEstimator(BaseEstimator):
 
 # Perform 5-fold cross-validation
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
-softmax_scores = cross_val_score(SoftmaxRegressionEstimator(X_train.shape[1], len(np.unique(y_train)), alpha=0.1, num_epochs=50), X_train, y_train, cv=cv, scoring='accuracy')
+softmax_scores = cross_val_score(SoftmaxRegressionEstimator(X_train.shape[1], len(np.unique(y_train)), alpha=0.1, num_epochs=1000), X_train, y_train, cv=cv, scoring='accuracy')
 svm_scores = cross_val_score(SVMEstimator(C=1.0), X_train, y_train, cv=cv, scoring='accuracy')
 
 # Print cross-validation results
@@ -117,7 +118,7 @@ print("Cross-validation results (Softmax Regression):", softmax_scores)
 print("Cross-validation results (SVM):", svm_scores)
 
 # Train the best model on the entire training set (you can use the model with the highest cross-validation accuracy)
-best_softmax_model = SoftmaxRegressionEstimator(X_train.shape[1], len(np.unique(y_train)), alpha=0.1, num_epochs=50)
+best_softmax_model = SoftmaxRegressionEstimator(X_train.shape[1], len(np.unique(y_train)), alpha=0.1, num_epochs=1000)
 best_softmax_model.fit(X_train, y_train)
 best_svm_model = SVMEstimator(C=1.0)
 best_svm_model.fit(X_train, y_train)
